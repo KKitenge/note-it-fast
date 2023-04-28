@@ -2,6 +2,8 @@
 const express = require('express');
 const app = express();
 const fs = require('fs');
+const util = require('util');
+const readFile = util.promisify(fs.readFile);
 const path = require('path');
 const PORT = process.env.port || 3001;
 
@@ -22,7 +24,6 @@ app.get('/notes', (req, res) => {
 
 //Get notes in db
 app.get("/api/notes", (req, res) => {
-    const readFile = require("fs").readFile;
     const getNotes = () => readFile("db/db.json", "utf8").then(notes => JSON.parse(notes));
 
     getNotes()
@@ -41,18 +42,13 @@ app.post('/api/notes', (req, res) => {
         };
 
         const writeFile = require("fs").writeFile;
-        readFile("db/db.json", "utf8").then(notes => JSON.parse(notes));
-            then(notes => {
-                notes.push(note);
+        readFile("db/db.json", "utf8")
+            .then(notes => JSON.parse(notes))
+            .then(notes => {
+                notes.push(newNote);
                 return writeFile("db/db.json", JSON.stringify(notes));
-        });
-            then(() => res.json(note)).catch(err => res.json(err));
-
-        const response = {
-            status: 'success',
-            body: newNote,
-        };
-        return response;
+            })
+            .then(() => res.json(newNote)).catch(err => res.json(err));
     }
 });
 
