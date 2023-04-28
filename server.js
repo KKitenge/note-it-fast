@@ -31,37 +31,44 @@ app.get("/api/notes", (req, res) => {
     //     .then(notes => res.json(notes)).catch(err => res.json(err));
     fs.readFile('./db/db.json', (err, data) => {
         if (err) {
-          console.log(err);
+            console.log(err);
         } else {
-          res.json(JSON.parse(data));
+            res.json(JSON.parse(data));
         }
-      });
+    });
 });
 
 //Post request to add a note
 //Add a new not to the database
 app.post('/api/notes', (req, res) => {
     console.info(`${req.method} request received to add a note or notes`);
-    const { title, text } = req.body
+    const { title, text } = req.body;
     if (title && text) {
         const newNote = {
             title,
             text,
         };
 
-        const writeFile = require("fs").writeFile;
         readFile(path.join(__dirname, './db/db.json'), (err, data) => {
-            if (err) console.error(err);
-            else return JSON.parse(data);
-        })
-            .then(notes => {
-                notes.push(newNote);
-                return writeFile(path.join(__dirname, './db/db.json'), notes);
-            })
-            .catch((err) => console.error(err))
+            if (err) {
+                console.error(err);
+            } else {
+                const notes = JSON.parse(data);
+                notes[newNote] = text;
+                fs.writeFile(path.join(__dirname, './db/db.json'), JSON.stringify(notes), (err) => {
+                    if (err) {
+                        console.log(err);
+                        res.status(400).json({ error: "Error writing note to db.json file." });
+                    } else {
+                        console.log('Note added to db.json file.');
+                        res.status(201).json({ newNote });
+                    }
+                });
+            }
+        });
     }
     else {
-        return res.status(400).json({ error: "Please provide a title and text for the note." });
+        return res.status(400).json({ error: "Please provide a title and text for the note." })
     }
 });
 
