@@ -24,16 +24,24 @@ app.get('/notes', (req, res) => {
 
 //Get notes in db
 app.get("/api/notes", (req, res) => {
-    const getNotes = () => readFile("db/db.json", "utf8").then(notes => JSON.parse(notes));
+    console.info(`${req.method} request received for note123`);
+    // const getNotes = () => readFile(path.join(__dirname, './db/db.json')).then(notes => JSON.parse(notes));
 
-    getNotes()
-        .then(notes => res.json(notes)).catch(err => res.json(err));
+    // getNotes()
+    //     .then(notes => res.json(notes)).catch(err => res.json(err));
+    fs.readFile('./db/db.json', (err, data) => {
+        if (err) {
+          console.log(err);
+        } else {
+          res.json(JSON.parse(data));
+        }
+      });
 });
 
 //Post request to add a note
 //Add a new not to the database
 app.post('/api/notes', (req, res) => {
-    console.info(`${req.method} request received to add a note`);
+    console.info(`${req.method} request received to add a note or notes`);
     const { title, text } = req.body
     if (title && text) {
         const newNote = {
@@ -42,13 +50,18 @@ app.post('/api/notes', (req, res) => {
         };
 
         const writeFile = require("fs").writeFile;
-        readFile("db/db.json", "utf8")
-            .then(notes => JSON.parse(notes))
+        readFile(path.join(__dirname, './db/db.json'), (err, data) => {
+            if (err) console.error(err);
+            else return JSON.parse(data);
+        })
             .then(notes => {
                 notes.push(newNote);
-                return writeFile("db/db.json", JSON.stringify(notes));
+                return writeFile(path.join(__dirname, './db/db.json'), notes);
             })
-            .then(() => res.json(newNote)).catch(err => res.json(err));
+            .catch((err) => console.error(err))
+    }
+    else {
+        return res.status(400).json({ error: "Please provide a title and text for the note." });
     }
 });
 
