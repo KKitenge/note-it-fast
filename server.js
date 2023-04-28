@@ -20,10 +20,33 @@ app.get('/notes', (req, res) => {
 
 });
 
-app.get('/api/notes', (req, res) => {
-    console.info(`${req.method} Note request received`);
-    readFileData('./db/db.json').then((data) => res.json(JSON.parse(data)));
+//Get notes in db
+app.get("/api/notes", (req, res) => {
+    const getNotes = () => readFile("db/db.json", "utf8")
+        .then(notes => JSON.parse(notes));
+
+    getNotes()
+        .then(notes => res.json(notes))
+        .catch(err => res.json(err));
 });
 
+app.post('/api/notes', (req, res) => {
+    console.info(`${req.method} request received to add a note`);
+    const { title, text } = req.body 
+    if (title && text) {
+        const newNote = {
+            title,
+            text,
+        };
+
+        const response = {
+            status: 'success',
+            body: newNote,
+        };
+
+        console.log(response);
+    }
+    return response
+});
 
 app.listen(PORT, () => console.log(`Notes app listening at http://localhost:${PORT}`));
